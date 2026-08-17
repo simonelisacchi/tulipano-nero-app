@@ -288,7 +288,20 @@ const Agenda = {
     }
   },
 
-  apriForm(id, presetti = {}) {
+  async apriForm(id, presetti = {}) {
+    // Solo per un NUOVO appuntamento (non quando se ne modifica uno già esistente): se il
+    // giorno selezionato è segnato come chiuso, blocchiamo e chiediamo se sbloccarlo prima di
+    // proseguire — così non capita di prendere un appuntamento per sbaglio in un giorno che si
+    // pensava di tenere libero.
+    if (!id && Agenda.eGiornoChiuso(Agenda.dataSelezionata)) {
+      const d = new Date(Agenda.dataSelezionata + 'T00:00:00');
+      const testoData = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+      const etichetta = testoData.charAt(0).toUpperCase() + testoData.slice(1);
+      const conferma = confirm(`${etichetta} è segnato come chiuso.\n\nVuoi sbloccarlo per aggiungere comunque un appuntamento?`);
+      if (!conferma) return;
+      await Agenda.toggleFerie(Agenda.dataSelezionata);
+    }
+
     const form = document.getElementById('form-appuntamento');
     form.reset();
     form.elements['id'].value = '';
@@ -514,7 +527,15 @@ const Agenda = {
       const tipo = Agenda._eDefaultChiuso(iso) ? 'aperto' : 'chiuso';
       await DB.save('ferie', { data: iso, tipo });
     }
-    await Agenda._renderMese();
+    Agenda.ferieCache = await DB.getAll('ferie');
+
+    // Aggiorna solo la vista effettivamente visibile in questo momento, non sempre entrambe.
+    if (Agenda.modalitaVista === 'mese') {
+      await Agenda._renderMese();
+    } else if (Agenda.dataSelezionata === iso) {
+      const griglia = document.getElementById('agenda-griglia');
+      if (griglia) griglia.classList.toggle('agenda-griglia--chiuso', Agenda.eGiornoChiuso(iso));
+    }
     Sync.syncNow({ silent: true });
   }
 };
