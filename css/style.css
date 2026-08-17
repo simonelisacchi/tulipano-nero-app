@@ -240,11 +240,14 @@ button { cursor: pointer; }
   background: var(--bordo);
   border: 1px solid var(--bordo);
   border-radius: 12px;
-  /* "clip" invece di "hidden": ritaglia visivamente gli angoli arrotondati allo stesso modo,
-     ma senza far diventare la griglia un "contenitore di scroll" a sé — con "hidden", il
-     mouse sopra la griglia faceva credere al browser di dover far scorrere lei (che non può
-     muoversi) invece di lasciar passare la rotellina al contenitore che scorre davvero. */
-  overflow: clip;
+  /* NESSUNA proprietà "overflow" qui, di proposito: sia "hidden" sia "clip" possono far
+     credere ad alcuni browser che questa griglia sia lei stessa un "contenitore di scroll",
+     intercettando il tocco/rotellina sopra di essa invece di lasciarlo passare al contenitore
+     che scorre davvero (già osservato sia su Edge/PC sia su un tablet Android). Il prezzo è che
+     gli angoli quadrati delle celle d'angolo possono sporgere di un paio di pixel oltre gli
+     spigoli arrotondati — un dettaglio quasi invisibile, in cambio di uno scroll che funziona
+     in modo affidabile su qualunque browser, invece di dipendere da come ciascuno interpreta
+     una proprietà CSS più delicata di quanto sembri. */
   position: relative;
 }
 .agenda-griglia__ora { background: var(--crema-scuro); color: var(--testo-muto);
@@ -483,7 +486,7 @@ button { cursor: pointer; }
 .btn--blocco-largo { width: 100%; }
 
 /* ---------- Diagnostica (dentro Impostazioni) ---------- */
-.diagnostica-griglia { display: flex; flex-direction: column; border: 1px solid var(--bordo); border-radius: 10px; overflow: clip; }
+.diagnostica-griglia { display: flex; flex-direction: column; border: 1px solid var(--bordo); border-radius: 10px; }
 .diagnostica-riga {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   padding: 8px 12px; border-bottom: 1px solid var(--crema-scuro); font-size: 0.75rem;
