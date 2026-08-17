@@ -3,8 +3,8 @@
 // Questo è ciò che rende l'app utilizzabile SENZA internet: si scrive sempre qui per prima cosa.
 
 const DB_NAME = 'tulipano-nero-db';
-const DB_VERSION = 1;
-const STORES = ['clienti', 'magazzino', 'agenda'];
+const DB_VERSION = 2; // aumentata per aggiungere lo store "ferie" ai dispositivi già in uso
+const STORES = ['clienti', 'magazzino', 'agenda', 'ferie'];
 
 let dbPromise = null;
 

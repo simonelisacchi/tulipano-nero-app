@@ -32,8 +32,10 @@ function orarioInMinuti(hhmm) {
 
 const Agenda = {
   cache: [],
+  ferieCache: [],
   dataSelezionata: fmtDataOggi(),
   modalitaVista: 'giorno',
+  modalitaFerie: false, // mentre è true, toccare un giorno nella vista mese lo segna/toglie come ferie invece di aprirlo
   meseVisualizzato: null,
   _clientiIndex: [],
 
@@ -64,6 +66,7 @@ const Agenda = {
     document.getElementById('agenda-vedi-giorno').addEventListener('click', () => Agenda.mostraGiorno());
     document.getElementById('mese-prev').addEventListener('click', () => Agenda.spostaMese(-1));
     document.getElementById('mese-next').addEventListener('click', () => Agenda.spostaMese(1));
+    document.getElementById('btn-ferie').addEventListener('click', () => Agenda._toggleModalitaFerie());
 
     const d = new Date(Agenda.dataSelezionata + 'T00:00:00');
     Agenda.meseVisualizzato = { anno: d.getFullYear(), mese: d.getMonth() };
@@ -141,6 +144,7 @@ const Agenda = {
 
   mostraMese() {
     Agenda.modalitaVista = 'mese';
+    Agenda.modalitaFerie = false;
     const d = new Date(Agenda.dataSelezionata + 'T00:00:00');
     Agenda.meseVisualizzato = { anno: d.getFullYear(), mese: d.getMonth() };
     document.getElementById('agenda-vista-giorno').style.display = 'none';
@@ -166,12 +170,16 @@ const Agenda = {
 
   async render() {
     Agenda.cache = await DB.getAll('agenda');
+    Agenda.ferieCache = await DB.getAll('ferie');
     const clienti = await DB.getAll('clienti');
 
     const label = document.getElementById('agenda-data-label');
     const d = new Date(Agenda.dataSelezionata + 'T00:00:00');
     const testoData = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
     label.textContent = testoData.charAt(0).toUpperCase() + testoData.slice(1);
+
+    const avvisoFerie = document.getElementById('agenda-avviso-ferie');
+    if (avvisoFerie) avvisoFerie.hidden = !Agenda.ferieCache.some((f) => f.data === Agenda.dataSelezionata);
 
     const delGiorno = Agenda.cache.filter((a) => a.data === Agenda.dataSelezionata && !a.eliminato);
 
@@ -193,12 +201,12 @@ const Agenda = {
         <span class="agenda-blocco__nome">${escapeHtml(a.clienteNome || 'Cliente')}</span>
         ${a.servizio ? `<span class="agenda-blocco__servizio">${escapeHtml(a.servizio)}</span>` : ''}
         <span class="agenda-blocco__spunta ${a.stato === 'completato' ? 'agenda-blocco__spunta--attiva' : ''}"
-              data-id="${a.id}" role="button" aria-label="Tieni premuto per segnare come completato" title="Tieni premuto per segnare come completato">
+              data-id="${a.id}" role="button" aria-label="Segna come completato" title="Segna come completato">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
         </span>
       `;
       blocco.addEventListener('click', () => Agenda.apriForm(a.id));
-      Agenda._collegaPressioneLunga(blocco.querySelector('.agenda-blocco__spunta'), a.id);
+      Agenda._collegaSpunta(blocco.querySelector('.agenda-blocco__spunta'), a.id);
       griglia.appendChild(blocco);
     });
 
@@ -381,42 +389,16 @@ const Agenda = {
     return -1;
   },
 
-  // Gesto "tieni premuto" per cambiare lo stato dell'appuntamento: volutamente più lento
-  // di un semplice tocco, così non capita per sbaglio scorrendo o toccando la griglia.
-  // Un anello che si riempie durante la pressione mostra quanto manca.
-  _collegaPressioneLunga(elemento, id) {
-    const DURATA_MS = 550;
-    let timer = null;
-    let completata = false;
-
-    const avvia = (e) => {
-      e.stopPropagation();
-      completata = false;
-      elemento.classList.add('agenda-blocco__spunta--in-pressione');
-      timer = setTimeout(() => {
-        completata = true;
-        elemento.classList.remove('agenda-blocco__spunta--in-pressione');
-        elemento.classList.add('agenda-blocco__spunta--completata');
-        setTimeout(() => elemento.classList.remove('agenda-blocco__spunta--completata'), 250);
-        Agenda.toggleStato(id);
-      }, DURATA_MS);
-    };
-
-    const annulla = (e) => {
-      e.stopPropagation();
-      clearTimeout(timer);
-      elemento.classList.remove('agenda-blocco__spunta--in-pressione');
-    };
-
-    elemento.addEventListener('touchstart', avvia, { passive: false });
-    elemento.addEventListener('touchend', annulla);
-    elemento.addEventListener('touchmove', annulla);
-    elemento.addEventListener('touchcancel', annulla);
-    elemento.addEventListener('mousedown', avvia);
-    elemento.addEventListener('mouseup', annulla);
-    elemento.addEventListener('mouseleave', annulla);
-    // Un tocco breve non deve fare nulla (né aprire il modale sottostante).
-    elemento.addEventListener('click', (e) => e.stopPropagation());
+  // Il tasto per completare l'appuntamento risponde a un semplice tocco: più adatto
+  // all'uso su tablet, dove serve vedere subito il risultato. Una piccola animazione di
+  // rimbalzo conferma il tocco, e il colore del blocco cambia immediatamente (vedi CSS).
+  _collegaSpunta(elemento, id) {
+    elemento.addEventListener('click', (e) => {
+      e.stopPropagation(); // non deve aprire anche il modulo di modifica sottostante
+      elemento.classList.add('agenda-blocco__spunta--completata');
+      setTimeout(() => elemento.classList.remove('agenda-blocco__spunta--completata'), 250);
+      Agenda.toggleStato(id);
+    });
   },
 
   async toggleStato(id) {
@@ -441,6 +423,7 @@ const Agenda = {
 
   async _renderMese() {
     Agenda.cache = await DB.getAll('agenda');
+    Agenda.ferieCache = await DB.getAll('ferie');
     const { anno, mese } = Agenda.meseVisualizzato;
 
     const label = document.getElementById('mese-label');
@@ -459,6 +442,7 @@ const Agenda = {
 
     const isoDiGiorno = (g) => `${anno}-${String(mese + 1).padStart(2, '0')}-${String(g).padStart(2, '0')}`;
     const oggiIso = fmtDataOggi();
+    const ferieSet = new Set(Agenda.ferieCache.map((f) => f.data));
 
     const griglia = document.getElementById('agenda-mese-griglia');
     griglia.innerHTML = celle.map((g) => {
@@ -466,8 +450,9 @@ const Agenda = {
       const iso = isoDiGiorno(g);
       const haAppuntamenti = Agenda.cache.some((a) => a.data === iso);
       const eOggi = iso === oggiIso;
+      const eFerie = ferieSet.has(iso);
       return `
-        <button type="button" class="agenda-mese-griglia__cella ${eOggi ? 'agenda-mese-griglia__cella--oggi' : ''}" data-iso="${iso}">
+        <button type="button" class="agenda-mese-griglia__cella ${eOggi ? 'agenda-mese-griglia__cella--oggi' : ''} ${eFerie ? 'agenda-mese-griglia__cella--ferie' : ''}" data-iso="${iso}">
           <span>${g}</span>
           ${haAppuntamenti ? '<span class="agenda-mese-griglia__pallino"></span>' : ''}
         </button>
@@ -476,10 +461,37 @@ const Agenda = {
 
     griglia.querySelectorAll('[data-iso]').forEach((cella) => {
       cella.addEventListener('click', () => {
+        if (Agenda.modalitaFerie) {
+          Agenda.toggleFerie(cella.dataset.iso);
+          return;
+        }
         Agenda.dataSelezionata = cella.dataset.iso;
         document.getElementById('agenda-data').value = cella.dataset.iso;
         Agenda.mostraGiorno();
       });
     });
+  },
+
+  // Attiva/disattiva la modalità "segna ferie": mentre è attiva, toccare un giorno nella
+  // vista mese lo aggiunge/toglie dai giorni di ferie invece di aprirlo. Un tocco sul
+  // pulsante stesso per uscire, così non serve segnare i giorni uno alla volta con
+  // conferme separate.
+  _toggleModalitaFerie() {
+    Agenda.modalitaFerie = !Agenda.modalitaFerie;
+    const btn = document.getElementById('btn-ferie');
+    btn.classList.toggle('btn--attivo', Agenda.modalitaFerie);
+    btn.textContent = Agenda.modalitaFerie ? 'Fatto' : 'Ferie';
+    document.getElementById('agenda-ferie-aiuto').hidden = !Agenda.modalitaFerie;
+  },
+
+  async toggleFerie(iso) {
+    const esistente = Agenda.ferieCache.find((f) => f.data === iso);
+    if (esistente) {
+      await DB.remove('ferie', esistente.id);
+    } else {
+      await DB.save('ferie', { data: iso });
+    }
+    await Agenda._renderMese();
+    Sync.syncNow({ silent: true });
   }
 };

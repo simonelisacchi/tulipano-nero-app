@@ -275,7 +275,10 @@ button { cursor: pointer; }
 .agenda-blocco__servizio { font-size: 0.8438rem; font-weight: 500; line-height: 1.2; color: var(--testo-muto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .agenda-blocco--confermato { background: #E9F1EB; border-left-color: var(--verde-nero); }
-.agenda-blocco--completato { background: var(--crema-scuro); border-left-color: var(--testo-muto); opacity: 0.8; }
+/* Grigio scuro (non più chiaro): deve saltare subito all'occhio chi è già stato servito,
+   scorrendo la giornata su un tablet, non passare inosservato. */
+.agenda-blocco--completato { background: #5C6660; border-left-color: #3F4740; color: var(--crema); }
+.agenda-blocco--completato .agenda-blocco__servizio { color: rgba(246,241,231,0.75); }
 
 .agenda-blocco__spunta {
   position: absolute; top: 50%; right: 3px; width: 28px; height: 28px; border-radius: 999px;
@@ -283,19 +286,12 @@ button { cursor: pointer; }
   border: 2px solid var(--testo-muto); background: var(--bianco); color: transparent;
   display: flex; align-items: center; justify-content: center; z-index: 3;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  overflow: hidden;
 }
 .agenda-blocco__spunta svg { width: 17px; height: 17px; position: relative; z-index: 1; }
 .agenda-blocco__spunta--attiva { background: var(--verde-nero); border-color: var(--verde-nero); color: var(--crema); }
 
-/* Anello che si riempie durante la pressione prolungata (circa mezzo secondo) */
-.agenda-blocco__spunta::after {
-  content: ''; position: absolute; inset: 0; border-radius: 999px;
-  background: var(--prugna); transform: scale(0); transform-origin: center;
-  transition: transform 0.55s linear;
-}
-.agenda-blocco__spunta--in-pressione::after { transform: scale(1); }
-.agenda-blocco__spunta--in-pressione svg { color: var(--crema); }
+/* Piccolo rimbalzo di conferma al tocco (sostituisce il precedente anello di pressione,
+   non più necessario ora che basta un tocco singolo). */
 .agenda-blocco__spunta--completata { animation: spunta-conferma 0.25s ease; }
 @keyframes spunta-conferma { 0% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.35); } 100% { transform: translateY(-50%) scale(1); } }
 
@@ -329,6 +325,24 @@ button { cursor: pointer; }
 .agenda-mese-griglia__cella--vuota { border: none; background: transparent; }
 .agenda-mese-griglia__cella--oggi { border-color: var(--verde-nero); border-width: 2px; font-weight: 700; }
 .agenda-mese-griglia__pallino { width: 6px; height: 6px; border-radius: 999px; background: var(--prugna); }
+
+/* Giorno di ferie: motivo a righe diagonali, riconoscibile come "chiuso" a colpo d'occhio,
+   senza bisogno di un colore nuovo nella tavolozza. */
+.agenda-mese-griglia__cella--ferie {
+  background: repeating-linear-gradient(45deg, var(--crema-scuro), var(--crema-scuro) 6px, var(--bordo) 6px, var(--bordo) 12px);
+  color: var(--testo-muto);
+}
+
+/* Pulsante "Ferie" mentre la modalità di selezione è attiva */
+.btn--attivo { background: var(--prugna); color: var(--crema); }
+
+.agenda-ferie-aiuto { text-align: center; margin: 0 0 10px; }
+
+.agenda-avviso-ferie {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--crema-scuro); border: 1px solid var(--bordo); color: var(--testo-muto);
+  padding: 10px 14px; border-radius: var(--raggio); margin-bottom: 14px; font-size: 0.875rem; font-weight: 600;
+}
 
 /* ---------- Avviso scorta ---------- */
 .avviso-scorta {
@@ -436,6 +450,7 @@ button { cursor: pointer; }
 .impostazioni-menu__titolo { font-weight: 700; font-size: 0.9375rem; }
 .impostazioni-menu__valore { font-size: 0.8125rem; color: var(--testo-muto); }
 .impostazioni-menu__freccia { width: 18px; height: 18px; color: var(--testo-muto); flex-shrink: 0; }
+.impostazioni-firma { text-align: center; font-size: 0.75rem; color: var(--testo-muto); margin: 14px 0 4px; }
 
 /* Pannelli di dettaglio: stessa "cornice" per tutti, con il tasto per tornare al menu in cima. */
 .impostazioni-blocco { padding: 14px 20px 20px; gap: 10px; }

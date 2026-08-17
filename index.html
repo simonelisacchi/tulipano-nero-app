@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!--
+  Tulipano Nero — gestionale del salone
+  Realizzata da Simone Li Sacchi, con l'aiuto di Claude (Anthropic).
+-->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -74,6 +78,7 @@
         <button id="agenda-oggi" class="btn btn--secondario">Oggi</button>
         <button id="agenda-vedi-mese" class="btn btn--secondario">Vedi mese</button>
       </div>
+      <p id="agenda-avviso-ferie" class="agenda-avviso-ferie" hidden>🌴 Giorno segnato come ferie</p>
       <div class="agenda-griglia-scroll">
         <div id="agenda-griglia" class="agenda-griglia"></div>
       </div>
@@ -90,7 +95,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </button>
         <button id="agenda-vedi-giorno" class="btn btn--secondario">Vedi giorno</button>
+        <button id="btn-ferie" type="button" class="btn btn--secondario">Ferie</button>
       </div>
+      <p id="agenda-ferie-aiuto" class="testo-aiuto agenda-ferie-aiuto" hidden>Tocca i giorni da segnare come ferie. Tocca di nuovo "Fatto" quando hai finito.</p>
       <div class="agenda-mese-intestazione">
         <span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span>
       </div>
@@ -280,6 +287,7 @@
           </span>
           <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
+        <p class="impostazioni-firma">🌷 Realizzata da Simone Li Sacchi, con l'aiuto di Claude</p>
       </div>
 
       <!-- Livello 2: dettaglio di ciascuna categoria. Una sola alla volta, con un tasto per tornare al menu. -->

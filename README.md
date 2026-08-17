@@ -1,5 +1,7 @@
 # Tulipano Nero — App gestionale del salone
 
+*Realizzata da Simone Li Sacchi, con l'aiuto di Claude (Anthropic). 🌷*
+
 App installabile su tablet/smartphone che funziona **anche senza internet** e si sincronizza
 con un foglio Google quando la connessione torna disponibile.
 
@@ -208,6 +210,7 @@ quindi funziona sempre, qualunque sia la causa esatta del blocco.
 - **Listino Prezzi**: nelle Impostazioni i prezzi sono mostrati bloccati (sola lettura), per evitare di cambiarli per sbaglio scorrendo la schermata; tocca "Modifica prezzi" per sbloccarli, poi ogni prezzo si tocca e si riscrive (le modifiche restano salvate sul tablet). Usa "Stampa listino" per stamparlo — non serve nessun file PDF a parte. Le durate usate in Agenda restano invece definite in `js/listino.js`.
 - **Indirizzo di sincronizzazione**: nelle Impostazioni è mostrato come "Configurata/Non configurata" e non è modificabile a colpo d'occhio; tocca "Modifica indirizzo" per aprirlo e cambiarlo. Anche questo per evitare di toccarlo o cancellarlo per sbaglio.
 - **Pannello "Diagnostica"**: in fondo alle Impostazioni mostra informazioni tecniche sul tablet che hai in mano (versione dell'app, stato della sincronizzazione ed eventuali errori, quanti dati sono salvati e quanti ancora da sincronizzare, spazio occupato). Include anche "Forza risincronizzazione completa" (se un tablet sembra disallineato, riscarica tutto da zero dal foglio Google) e "Copia diagnostica" (copia tutto come testo). Utile soprattutto a te per un controllo veloce; Mary può ignorarlo tranquillamente.
+- **Giorni di ferie**: in Agenda → "Vedi mese" → tocca "Ferie" per attivare la modalità di selezione (il pulsante diventa "Fatto"), poi tocca i giorni da segnare — si evidenziano con un motivo a righe. Tocca di nuovo "Fatto" per uscire dalla modalità. I giorni di ferie si sincronizzano come tutto il resto: segnati su un dispositivo, compaiono anche sull'altro. Aprendo un giorno di ferie in vista giornaliera compare un avviso in cima.
 - **Il foglio Google resta comunque leggibile e modificabile normalmente** da PC, utile come backup o per dare un'occhiata veloce; le modifiche fatte lì vengono scaricate sul tablet alla sincronizzazione successiva.
 - **Non cancellare o rinominare le colonne** create automaticamente nel foglio (id, aggiornatoIl, eliminato, ecc.): servono all'app per riconoscere i record. Puoi tranquillamente aggiungere fogli/colonne extra tue senza problemi, l'app usa solo quelle previste.
 - La cancellazione di un cliente/prodotto/appuntamento dall'app non cancella subito la riga dal foglio: la marca come "eliminato" (colonna `eliminato` = TRUE), così anche i dispositivi offline sanno che va rimossa. È una scelta voluta per evitare perdite di dati.
