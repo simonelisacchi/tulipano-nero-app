@@ -240,7 +240,11 @@ button { cursor: pointer; }
   background: var(--bordo);
   border: 1px solid var(--bordo);
   border-radius: 12px;
-  overflow: hidden;
+  /* "clip" invece di "hidden": ritaglia visivamente gli angoli arrotondati allo stesso modo,
+     ma senza far diventare la griglia un "contenitore di scroll" a sé — con "hidden", il
+     mouse sopra la griglia faceva credere al browser di dover far scorrere lei (che non può
+     muoversi) invece di lasciar passare la rotellina al contenitore che scorre davvero. */
+  overflow: clip;
   position: relative;
 }
 .agenda-griglia__ora { background: var(--crema-scuro); color: var(--testo-muto);
@@ -458,7 +462,7 @@ button { cursor: pointer; }
 .btn--blocco-largo { width: 100%; }
 
 /* ---------- Diagnostica (dentro Impostazioni) ---------- */
-.diagnostica-griglia { display: flex; flex-direction: column; border: 1px solid var(--bordo); border-radius: 10px; overflow: hidden; }
+.diagnostica-griglia { display: flex; flex-direction: column; border: 1px solid var(--bordo); border-radius: 10px; overflow: clip; }
 .diagnostica-riga {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   padding: 8px 12px; border-bottom: 1px solid var(--crema-scuro); font-size: 0.75rem;
