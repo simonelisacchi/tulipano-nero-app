@@ -4,6 +4,12 @@
 const ORE_AGENDA = generaOrari('07:00', '20:30', 30);
 const NUM_COLONNE_AGENDA = 3;
 
+// Giorni della settimana chiusi per default (0 = domenica, 1 = lunedì, secondo il calendario
+// JavaScript). Restano modificabili giorno per giorno tramite il pulsante "Ferie" in vista
+// mese: toccando una domenica o un lunedì la si segna come eccezionalmente aperta (utile nei
+// periodi di lavoro intenso), toccando un giorno normalmente aperto lo si segna come chiuso.
+const GIORNI_CHIUSURA_DEFAULT = [0, 1];
+
 // Durata per servizio, derivata dal listino prezzi (solo le voci con un tempo associato,
 // cioè quelle evidenziate in azzurro nel foglio originale): si può comunque modificare a mano nel form.
 const SERVIZI_DURATA = {};
@@ -35,7 +41,7 @@ const Agenda = {
   ferieCache: [],
   dataSelezionata: fmtDataOggi(),
   modalitaVista: 'giorno',
-  modalitaFerie: false, // mentre è true, toccare un giorno nella vista mese lo segna/toglie come ferie invece di aprirlo
+  modalitaFerie: false, // mentre è true, toccare un giorno nella vista mese ne cambia lo stato (aperto/chiuso) invece di aprirlo
   meseVisualizzato: null,
   _clientiIndex: [],
 
@@ -178,8 +184,8 @@ const Agenda = {
     const testoData = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
     label.textContent = testoData.charAt(0).toUpperCase() + testoData.slice(1);
 
-    const avvisoFerie = document.getElementById('agenda-avviso-ferie');
-    if (avvisoFerie) avvisoFerie.hidden = !Agenda.ferieCache.some((f) => f.data === Agenda.dataSelezionata);
+    const grigliaGiorno = document.getElementById('agenda-griglia');
+    if (grigliaGiorno) grigliaGiorno.classList.toggle('agenda-griglia--chiuso', Agenda.eGiornoChiuso(Agenda.dataSelezionata));
 
     const delGiorno = Agenda.cache.filter((a) => a.data === Agenda.dataSelezionata && !a.eliminato);
 
@@ -442,7 +448,6 @@ const Agenda = {
 
     const isoDiGiorno = (g) => `${anno}-${String(mese + 1).padStart(2, '0')}-${String(g).padStart(2, '0')}`;
     const oggiIso = fmtDataOggi();
-    const ferieSet = new Set(Agenda.ferieCache.map((f) => f.data));
 
     const griglia = document.getElementById('agenda-mese-griglia');
     griglia.innerHTML = celle.map((g) => {
@@ -450,9 +455,9 @@ const Agenda = {
       const iso = isoDiGiorno(g);
       const haAppuntamenti = Agenda.cache.some((a) => a.data === iso);
       const eOggi = iso === oggiIso;
-      const eFerie = ferieSet.has(iso);
+      const eChiuso = Agenda.eGiornoChiuso(iso);
       return `
-        <button type="button" class="agenda-mese-griglia__cella ${eOggi ? 'agenda-mese-griglia__cella--oggi' : ''} ${eFerie ? 'agenda-mese-griglia__cella--ferie' : ''}" data-iso="${iso}">
+        <button type="button" class="agenda-mese-griglia__cella ${eOggi ? 'agenda-mese-griglia__cella--oggi' : ''} ${eChiuso ? 'agenda-mese-griglia__cella--chiuso' : ''}" data-iso="${iso}">
           <span>${g}</span>
           ${haAppuntamenti ? '<span class="agenda-mese-griglia__pallino"></span>' : ''}
         </button>
@@ -472,10 +477,24 @@ const Agenda = {
     });
   },
 
-  // Attiva/disattiva la modalità "segna ferie": mentre è attiva, toccare un giorno nella
-  // vista mese lo aggiunge/toglie dai giorni di ferie invece di aprirlo. Un tocco sul
-  // pulsante stesso per uscire, così non serve segnare i giorni uno alla volta con
-  // conferme separate.
+  // Vero se questo giorno della settimana è chiuso per default (domenica/lunedì), a
+  // prescindere da eventuali eccezioni segnate a mano.
+  _eDefaultChiuso(iso) {
+    const giorno = new Date(iso + 'T00:00:00').getDay();
+    return GIORNI_CHIUSURA_DEFAULT.includes(giorno);
+  },
+
+  // Vero se il giorno risulta chiuso, tenendo conto sia della chiusura settimanale di default
+  // sia di un'eventuale eccezione segnata a mano (che può andare in entrambe le direzioni:
+  // chiudere un giorno normalmente aperto, o riaprirne uno normalmente chiuso).
+  eGiornoChiuso(iso) {
+    const eccezione = Agenda.ferieCache.find((f) => f.data === iso);
+    if (eccezione) return eccezione.tipo === 'chiuso';
+    return Agenda._eDefaultChiuso(iso);
+  },
+
+  // Attiva/disattiva la modalità "segna chiusure": mentre è attiva, toccare un giorno nella
+  // vista mese ne cambia lo stato invece di aprirlo. Un tocco sul pulsante stesso per uscire.
   _toggleModalitaFerie() {
     Agenda.modalitaFerie = !Agenda.modalitaFerie;
     const btn = document.getElementById('btn-ferie');
@@ -484,12 +503,16 @@ const Agenda = {
     document.getElementById('agenda-ferie-aiuto').hidden = !Agenda.modalitaFerie;
   },
 
+  // Tocca un giorno per ribaltarne lo stato rispetto al comportamento di default: un giorno
+  // normalmente aperto viene segnato come chiuso (es. ferie), uno normalmente chiuso (domenica,
+  // lunedì) viene segnato come eccezionalmente aperto. Toccandolo di nuovo si torna al default.
   async toggleFerie(iso) {
     const esistente = Agenda.ferieCache.find((f) => f.data === iso);
     if (esistente) {
       await DB.remove('ferie', esistente.id);
     } else {
-      await DB.save('ferie', { data: iso });
+      const tipo = Agenda._eDefaultChiuso(iso) ? 'aperto' : 'chiuso';
+      await DB.save('ferie', { data: iso, tipo });
     }
     await Agenda._renderMese();
     Sync.syncNow({ silent: true });

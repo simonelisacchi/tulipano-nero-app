@@ -1,6 +1,6 @@
 // Service Worker Tulipano Nero
 // Mette in cache l'app (HTML/CSS/JS/icone) così si apre e funziona anche senza internet.
-const CACHE_VERSION = 'tulipano-nero-v20';
+const CACHE_VERSION = 'tulipano-nero-v22';
 const APP_SHELL = [
   './',
   './index.html',

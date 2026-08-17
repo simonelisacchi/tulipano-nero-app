@@ -231,7 +231,6 @@ button { cursor: pointer; }
 .campo-data-nascosto { position: absolute; inset: 0; opacity: 0; }
 
 /* ---------- Agenda: griglia giornaliera a 3 colonne (stile agenda cartacea) ---------- */
-.agenda-griglia-scroll { -webkit-overflow-scrolling: touch; }
 .agenda-griglia {
   display: grid;
   grid-template-columns: 52px repeat(3, 1fr);
@@ -326,9 +325,9 @@ button { cursor: pointer; }
 .agenda-mese-griglia__cella--oggi { border-color: var(--verde-nero); border-width: 2px; font-weight: 700; }
 .agenda-mese-griglia__pallino { width: 6px; height: 6px; border-radius: 999px; background: var(--prugna); }
 
-/* Giorno di ferie: motivo a righe diagonali, riconoscibile come "chiuso" a colpo d'occhio,
-   senza bisogno di un colore nuovo nella tavolozza. */
-.agenda-mese-griglia__cella--ferie {
+/* Giorno chiuso (ferie, o domenica/lunedì di default): motivo a righe diagonali,
+   riconoscibile come "chiuso" a colpo d'occhio, senza bisogno di un colore nuovo. */
+.agenda-mese-griglia__cella--chiuso {
   background: repeating-linear-gradient(45deg, var(--crema-scuro), var(--crema-scuro) 6px, var(--bordo) 6px, var(--bordo) 12px);
   color: var(--testo-muto);
 }
@@ -338,10 +337,16 @@ button { cursor: pointer; }
 
 .agenda-ferie-aiuto { text-align: center; margin: 0 0 10px; }
 
-.agenda-avviso-ferie {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--crema-scuro); border: 1px solid var(--bordo); color: var(--testo-muto);
-  padding: 10px 14px; border-radius: var(--raggio); margin-bottom: 14px; font-size: 0.875rem; font-weight: 600;
+/* Giorno chiuso in vista giornaliera: stesso tratteggio della vista mese, sovrapposto alla
+   griglia (le celle sotto hanno uno sfondo pieno, quindi il tratteggio va messo sopra come
+   un velo semitrasparente, non sullo sfondo della griglia che resterebbe coperto). Resta
+   sotto agli eventuali appuntamenti già segnati quel giorno (z-index più basso), che restano
+   comunque visibili e toccabili. */
+.agenda-griglia--chiuso::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: repeating-linear-gradient(45deg, var(--crema-scuro) 0, var(--crema-scuro) 6px, var(--bordo) 6px, var(--bordo) 12px);
+  opacity: 0.6;
 }
 
 /* ---------- Avviso scorta ---------- */
