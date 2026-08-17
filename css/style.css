@@ -50,6 +50,7 @@ html {
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
   background: var(--crema);
   color: var(--testo);
   font-family: var(--font-corpo);
@@ -57,19 +58,11 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* L'altezza di "body" viene presa direttamente dallo schermo visibile (non ereditata per
-   percentuale da html): l'eredità per percentuale è un'area nota di comportamenti incoerenti
-   quando l'app è installata come icona a schermo intero (senza la barra del browser),
-   specialmente su iOS — può risultare in un contenitore "più alto di quanto lo schermo mostri
-   davvero", che quindi il browser non considera mai bisognoso di scorrere, pur avendo
-   contenuto tagliato fuori in basso. "overflow:hidden" qui impedisce anche alla pagina stessa
-   di provare a scorrere per conto suo: lo scroll resta un compito solo di ".contenuto" sotto. */
 body {
   display: flex;
   flex-direction: column;
-  height: 100vh;  /* ripiego per browser/webview meno recenti */
-  height: 100dvh; /* altezza reale dello schermo visibile: più affidabile di una percentuale ereditata */
-  overflow: hidden;
+  min-height: 100vh;  /* ripiego per browser/webview meno recenti */
+  min-height: 100dvh; /* più preciso quando supportato, ma come "minimo", non come vincolo rigido */
 }
 
 button, input, select, textarea { font-family: inherit; font-size: 1rem; }
