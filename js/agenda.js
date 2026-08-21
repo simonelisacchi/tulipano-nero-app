@@ -74,6 +74,9 @@ const Agenda = {
     document.getElementById('mese-next').addEventListener('click', () => Agenda.spostaMese(1));
     document.getElementById('btn-ferie').addEventListener('click', () => Agenda._toggleModalitaFerie());
 
+    document.getElementById('btn-cerca-appuntamento').addEventListener('click', () => Agenda._apriRicerca());
+    document.getElementById('ricerca-agenda-input').addEventListener('input', debounce(() => Agenda._renderRicerca(), 200));
+
     const d = new Date(Agenda.dataSelezionata + 'T00:00:00');
     Agenda.meseVisualizzato = { anno: d.getFullYear(), mese: d.getMonth() };
 
@@ -438,6 +441,72 @@ const Agenda = {
     await Agenda.render();
     toast('Appuntamento eliminato', 'info');
     Sync.syncNow({ silent: true });
+  },
+
+  // Ricerca appuntamenti (passati o futuri) per nome cliente, su tutto lo storico e non solo
+  // sul giorno visualizzato al momento: utile per ritrovare al volo "quando è venuta l'ultima
+  // volta" o un appuntamento preso per una data lontana.
+  async _apriRicerca() {
+    const input = document.getElementById('ricerca-agenda-input');
+    input.value = '';
+    apriModal('modal-ricerca-agenda');
+    await Agenda._renderRicerca();
+    setTimeout(() => input.focus(), 50);
+  },
+
+  async _renderRicerca() {
+    const query = document.getElementById('ricerca-agenda-input').value.trim();
+    const contenitore = document.getElementById('ricerca-agenda-risultati');
+
+    if (!query) {
+      contenitore.innerHTML = `<p class="testo-aiuto" style="text-align:center;padding:24px 8px;">Scrivi il nome di un cliente per ritrovare i suoi appuntamenti, passati o futuri.</p>`;
+      return;
+    }
+
+    // Lettura diretta dal database (non dalla cache del giorno) così il risultato copre
+    // sempre tutto lo storico, anche se la vista giorno non è mai stata aperta su quelle date.
+    const tutti = await DB.getAll('agenda');
+    const risultati = tutti
+      .filter((a) => corrispondeRicerca(a.clienteNome || '', query))
+      .sort((a, b) => `${b.data}${b.ora}`.localeCompare(`${a.data}${a.ora}`)); // più recenti prima
+
+    if (risultati.length === 0) {
+      contenitore.innerHTML = emptyState('Nessun appuntamento trovato', 'Prova con un altro nome.');
+      return;
+    }
+
+    contenitore.innerHTML = risultati.map((a) => {
+      const d = new Date(a.data + 'T00:00:00');
+      const giorno = String(d.getDate()).padStart(2, '0');
+      const mese = d.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
+      const extra = [a.servizio, a.stato === 'completato' ? 'completato' : null].filter(Boolean).join(' · ');
+      return `
+        <button type="button" class="risultato-appuntamento" data-id="${a.id}">
+          <span class="risultato-appuntamento__data">
+            <span class="risultato-appuntamento__giorno">${giorno}</span>
+            <span class="risultato-appuntamento__mese">${escapeHtml(mese)}</span>
+          </span>
+          <span class="risultato-appuntamento__dettagli">
+            <span class="risultato-appuntamento__nome">${escapeHtml(a.clienteNome || 'Cliente')}</span>
+            ${extra ? `<span class="risultato-appuntamento__extra">${escapeHtml(extra)}</span>` : ''}
+          </span>
+          <span class="risultato-appuntamento__ora">${escapeHtml(a.ora || '')}</span>
+        </button>
+      `;
+    }).join('');
+
+    contenitore.querySelectorAll('[data-id]').forEach((el) => {
+      el.addEventListener('click', () => Agenda._vaiARisultato(el.dataset.id, risultati));
+    });
+  },
+
+  _vaiARisultato(id, risultati) {
+    const a = risultati.find((r) => r.id === id);
+    if (!a) return;
+    chiudiModal('modal-ricerca-agenda');
+    Agenda.dataSelezionata = a.data;
+    document.getElementById('agenda-data').value = a.data;
+    Agenda.mostraGiorno();
   },
 
   async _renderMese() {

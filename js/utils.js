@@ -1,11 +1,5 @@
 // utils.js — piccole funzioni condivise tra i moduli
 
-function fmtData(iso) {
-  if (!iso) return '';
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-
 // Formatta una Data come AAAA-MM-GG usando il fuso orario LOCALE del dispositivo — mai UTC.
 // È importante vicino alla mezzanotte: l'Italia è avanti rispetto a UTC (1 o 2 ore, a seconda
 // della stagione), quindi usare toISOString() (che è sempre in UTC) farebbe risultare "ieri"
@@ -20,11 +14,6 @@ function formatDataLocale(d) {
 
 function fmtDataOggi() {
   return formatDataLocale(new Date());
-}
-
-function fmtOraBreve(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
 function escapeHtml(str) {

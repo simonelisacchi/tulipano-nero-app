@@ -1,6 +1,6 @@
 // Service Worker Tulipano Nero
 // Mette in cache l'app (HTML/CSS/JS/icone) così si apre e funziona anche senza internet.
-const CACHE_VERSION = 'tulipano-nero-v26';
+const CACHE_VERSION = 'tulipano-nero-v29';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './js/clienti.js',
   './js/agenda.js',
   './js/magazzino.js',
+  './js/promemoria.js',
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -59,6 +60,28 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => cached);
       return cached || fetchAggiornamento;
+    })
+  );
+});
+
+// Tocco sulla notifica del promemoria magazzino: se l'app è già aperta in una scheda, la
+// porta in primo piano e le dice di passare alla vista Magazzino; altrimenti ne apre una
+// nuova già su quella vista (vedi App.gestisciAperturaDaNotifica in app.js).
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const vista = (event.notification.data && event.notification.data.vista) || null;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((elenco) => {
+      for (const client of elenco) {
+        if ('focus' in client) {
+          client.focus();
+          if (vista) client.postMessage({ vaiAVista: vista });
+          return;
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(vista ? `./#${vista}` : './');
+      }
     })
   );
 });

@@ -46,7 +46,7 @@
 
 
   <!-- VISTA CLIENTI -->
-  <section id="vista-clienti" class="vista vista--attiva">
+  <section id="vista-clienti" class="vista">
     <div class="vista__intestazione">
       <h1>Scheda Clienti</h1>
       <button id="btn-aggiungi-cliente" class="btn btn--primario">+ Aggiungi cliente</button>
@@ -56,10 +56,15 @@
   </section>
 
   <!-- VISTA AGENDA -->
-  <section id="vista-agenda" class="vista">
+  <section id="vista-agenda" class="vista vista--attiva">
     <div class="vista__intestazione">
       <h1>Agenda</h1>
-      <button id="btn-aggiungi-appuntamento" class="btn btn--primario">+ Nuovo appuntamento</button>
+      <div class="vista__intestazione-azioni">
+        <button id="btn-cerca-appuntamento" class="icon-btn icon-btn--bordo" aria-label="Cerca appuntamento per cliente" title="Cerca appuntamento per cliente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
+        <button id="btn-aggiungi-appuntamento" class="btn btn--primario">+ Nuovo appuntamento</button>
+      </div>
     </div>
 
     <!-- vista giornaliera: griglia a 3 colonne, come un'agenda cartacea -->
@@ -121,11 +126,11 @@
 </main>
 
 <nav class="tab-bar">
-  <button class="tab-bar__voce tab-bar__voce--attiva" data-vista="clienti">
+  <button class="tab-bar__voce" data-vista="clienti">
     <svg class="tab-bar__icona" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4.2 3.1-6.5 7-6.5s7 2.3 7 6.5"/></svg>
     <span>Clienti</span>
   </button>
-  <button class="tab-bar__voce" data-vista="agenda">
+  <button class="tab-bar__voce tab-bar__voce--attiva" data-vista="agenda">
     <svg class="tab-bar__icona" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
     <span>Agenda</span>
   </button>
@@ -223,6 +228,20 @@
   </div>
 </div>
 
+<!-- MODAL RICERCA APPUNTAMENTI -->
+<div id="modal-ricerca-agenda" class="modal">
+  <div class="modal__pannello">
+    <div class="modal__intestazione">
+      <h2>Cerca appuntamento</h2>
+      <button class="icon-btn" onclick="chiudiModal('modal-ricerca-agenda')" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="modal__corpo">
+      <input id="ricerca-agenda-input" class="campo-ricerca" type="search" placeholder="Nome del cliente…" autocomplete="off">
+      <div id="ricerca-agenda-risultati" class="ricerca-agenda-risultati"></div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PRODOTTO -->
 <div id="modal-prodotto" class="modal">
   <div class="modal__pannello">
@@ -280,9 +299,22 @@
           </span>
           <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
+        <button type="button" class="impostazioni-menu__voce" data-apri="promemoria">
+          <span class="impostazioni-menu__testo">
+            <span class="impostazioni-menu__titolo">Promemoria magazzino</span>
+            <span class="impostazioni-menu__valore" id="menu-valore-promemoria">Non attivo</span>
+          </span>
+          <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
         <button type="button" class="impostazioni-menu__voce" data-apri="diagnostica">
           <span class="impostazioni-menu__testo">
             <span class="impostazioni-menu__titolo">Diagnostica</span>
+          </span>
+          <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button type="button" class="impostazioni-menu__voce" data-apri="backup">
+          <span class="impostazioni-menu__testo">
+            <span class="impostazioni-menu__titolo">Backup dati</span>
           </span>
           <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
@@ -347,6 +379,54 @@
         </div>
       </div>
 
+      <div id="sezione-promemoria" class="impostazioni-livello impostazioni-blocco" data-sezione="promemoria">
+        <button type="button" class="impostazioni-indietro">← Impostazioni</button>
+        <h3>Promemoria magazzino</h3>
+
+        <div class="impostazioni-riassunto">
+          <span>Stato: <strong id="promemoria-stato-testo">Non attivo</strong></span>
+          <button type="button" class="link-modifica" id="btn-promemoria-attiva">Attiva</button>
+          <button type="button" class="link-modifica" id="btn-promemoria-disattiva" hidden>Disattiva</button>
+        </div>
+
+        <p class="testo-aiuto" id="promemoria-avviso-bloccate" hidden>
+          Le notifiche sul tablet sono bloccate per questo sito a livello di browser, quindi il
+          promemoria comparirà solo dentro l'app quando è aperta. Per sbloccarle: menu del
+          browser (⋮) → Impostazioni sito → Notifiche → consenti per questo indirizzo.
+        </p>
+
+        <p class="testo-aiuto">
+          Quando attivo, verso le 18:00–18:30 dei giorni lavorativi compare un promemoria per
+          ricordare di segnare in Magazzino eventuali prodotti aggiunti o usati durante la
+          giornata. Non compare nei giorni segnati come chiusi in Agenda (domenica e lunedì di
+          default, più le ferie impostate a mano).
+        </p>
+        <p class="testo-aiuto">
+          Perché compaia serve che l'app sia aperta (anche in un'altra scheda o ridotta a
+          icona va bene, basta che non sia stata chiusa del tutto e il tablet sia acceso): è
+          un'app senza un proprio server dedicato all'invio di notifiche da fuori, quindi non
+          può "svegliarsi" da sola a tablet spento o app chiusa, come farebbe ad esempio
+          WhatsApp.
+        </p>
+      </div>
+
+      <div id="sezione-backup" class="impostazioni-livello impostazioni-blocco" data-sezione="backup">
+        <button type="button" class="impostazioni-indietro">← Impostazioni</button>
+        <h3>Backup dati</h3>
+        <p class="testo-aiuto">
+          Scarica una copia di tutti i dati dell'app — clienti, agenda, magazzino e giorni di
+          chiusura — in un unico file. È una rete di sicurezza in più, separata dal foglio
+          Google: utile prima di un intervento importante sul tablet, o semplicemente da
+          conservare ogni tanto da parte.
+        </p>
+        <p class="testo-aiuto">
+          Il file non si apre e non si legge a occhio: serve solo per essere ridato all'app
+          in caso di bisogno. Conservalo dove preferisci (email a te stesso, Google Drive, ecc.).
+        </p>
+        <button type="button" class="btn btn--primario btn--blocco-largo" id="btn-backup-scarica">Scarica backup</button>
+        <p class="testo-aiuto" id="backup-ultimo-testo"></p>
+      </div>
+
       <div id="sezione-diagnostica" class="impostazioni-livello impostazioni-blocco" data-sezione="diagnostica">
         <button type="button" class="impostazioni-indietro">← Impostazioni</button>
         <h3>Diagnostica</h3>
@@ -381,6 +461,7 @@
 <script src="js/clienti.js"></script>
 <script src="js/agenda.js"></script>
 <script src="js/magazzino.js"></script>
+<script src="js/promemoria.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

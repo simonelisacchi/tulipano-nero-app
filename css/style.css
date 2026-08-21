@@ -125,6 +125,9 @@ button { cursor: pointer; }
 }
 .icon-btn:hover { background: rgba(255,255,255,0.08); }
 .modal .icon-btn:hover { background: rgba(21,41,37,0.06); }
+.icon-btn--bordo { background: var(--crema-scuro); color: var(--verde-nero); flex-shrink: 0; }
+.icon-btn--bordo:hover { background: var(--prugna); color: var(--crema); }
+.vista__intestazione-azioni { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- Layout ---------- */
 .contenuto { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
@@ -215,6 +218,22 @@ button { cursor: pointer; }
 }
 .scheda-cliente__azioni { display: flex; gap: 8px; margin-top: 4px; }
 .btn--piccolo { padding: 7px 14px; font-size: 0.8125rem; flex: 1; }
+
+/* ---------- Ricerca appuntamenti (Agenda) ---------- */
+.ricerca-agenda-risultati { display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto; }
+.risultato-appuntamento {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--crema); border: 1px solid var(--bordo); border-radius: 14px; padding: 10px 12px;
+  cursor: pointer;
+}
+.risultato-appuntamento:hover { background: var(--crema-scuro); }
+.risultato-appuntamento__data { flex-shrink: 0; text-align: center; min-width: 52px; }
+.risultato-appuntamento__giorno { display: block; font-family: var(--font-display); font-size: 1.125rem; color: var(--verde-nero); line-height: 1.1; }
+.risultato-appuntamento__mese { display: block; font-size: 0.6875rem; text-transform: uppercase; color: var(--testo-muto); }
+.risultato-appuntamento__dettagli { flex: 1; min-width: 0; }
+.risultato-appuntamento__nome { display: block; font-weight: 700; font-size: 0.875rem; }
+.risultato-appuntamento__extra { display: block; font-size: 0.75rem; color: var(--testo-muto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.risultato-appuntamento__ora { flex-shrink: 0; font-size: 0.8125rem; font-weight: 600; color: var(--testo-muto); }
 
 /* ---------- Agenda: controlli comuni ---------- */
 .agenda-controlli { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; row-gap: 8px; }

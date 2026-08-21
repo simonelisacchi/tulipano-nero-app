@@ -2,9 +2,10 @@
 
 const STORES_APP = ['clienti', 'magazzino', 'agenda'];
 const ZOOM_KEY = 'tn_zoom';
+const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
 // Aggiornata a ogni modifica pubblicata: utile in Diagnostica per verificare al volo se un
 // tablet ha davvero scaricato l'ultima versione dopo un aggiornamento su GitHub.
-const APP_VERSION = '2026.08.16';
+const APP_VERSION = '2026.08.19';
 
 const App = {
   async init() {
@@ -20,6 +21,8 @@ const App = {
     await Clienti.init();
     await Agenda.init();
     await Magazzino.init();
+    Promemoria.init();
+    App.gestisciAperturaDaNotifica();
 
     if (Sync.getUrl() && Sync.getSecret()) {
       Sync.syncNow({ silent: true });
@@ -69,13 +72,37 @@ const App = {
         btn.addEventListener('click', () => App.apriImpostazioni());
         return;
       }
-      btn.addEventListener('click', () => {
-        tab.forEach((b) => { if (b.dataset.vista) b.classList.remove('tab-bar__voce--attiva'); });
-        btn.classList.add('tab-bar__voce--attiva');
-        document.querySelectorAll('.vista').forEach((v) => v.classList.remove('vista--attiva'));
-        document.getElementById(`vista-${btn.dataset.vista}`).classList.add('vista--attiva');
-      });
+      btn.addEventListener('click', () => App.vaiAVista(btn.dataset.vista));
     });
+  },
+
+  // Passa a una vista dato il suo nome (es. "magazzino"), simulando il tocco sulla relativa
+  // scheda in basso. Usata sia dai tocchi normali sia per aprire l'app già sulla vista giusta
+  // quando si tocca una notifica (es. il promemoria magazzino).
+  vaiAVista(nome) {
+    const tab = document.querySelectorAll('.tab-bar__voce');
+    tab.forEach((b) => {
+      if (!b.dataset.vista) return;
+      b.classList.toggle('tab-bar__voce--attiva', b.dataset.vista === nome);
+    });
+    document.querySelectorAll('.vista').forEach((v) => v.classList.remove('vista--attiva'));
+    const vista = document.getElementById(`vista-${nome}`);
+    if (vista) vista.classList.add('vista--attiva');
+  },
+
+  // Se l'app viene aperta (o riportata in primo piano) toccando la notifica del promemoria
+  // magazzino, il service worker apre l'indirizzo con #magazzino: qui la si intercetta e si
+  // passa subito alla vista giusta, invece di lasciare l'utente sulla Scheda Clienti di default.
+  gestisciAperturaDaNotifica() {
+    if (location.hash === '#magazzino') {
+      App.vaiAVista('magazzino');
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.vaiAVista) App.vaiAVista(event.data.vaiAVista);
+      });
+    }
   },
 
   apriImpostazioni() {
@@ -112,6 +139,10 @@ const App = {
       renderListino();
     } else if (nome === 'diagnostica') {
       App.renderDiagnostica();
+    } else if (nome === 'promemoria') {
+      Promemoria._aggiornaStatoSezione();
+    } else if (nome === 'backup') {
+      App._aggiornaTestoUltimoBackup();
     }
   },
 
@@ -133,6 +164,7 @@ const App = {
     if (syncEl) {
       syncEl.textContent = (Sync.getUrl() && Sync.getSecret()) ? 'Configurata' : 'Non configurata';
     }
+    Promemoria._aggiornaValoreMenu();
   },
 
   // ---------- Diagnostica ----------
@@ -283,6 +315,51 @@ const App = {
         toast('Non sono riuscito a copiare automaticamente: seleziona e copia a mano', 'errore');
       }
     });
+
+    // ---- Backup: un file scaricabile con una copia di tutti i dati ----
+    document.getElementById('btn-backup-scarica').addEventListener('click', () => App.scaricaBackup());
+  },
+
+  // Genera un file con una copia di tutti i dati (clienti, agenda, magazzino, ferie) e lo fa
+  // scaricare al dispositivo, come rete di sicurezza in più oltre al foglio Google. Non
+  // include i record cancellati: solo i dati "vivi" attualmente in uso.
+  async scaricaBackup() {
+    try {
+      const dati = { generatoIl: new Date().toISOString(), app: 'Tulipano Nero', versione: APP_VERSION };
+      for (const store of STORES) {
+        dati[store] = await DB.getAll(store);
+      }
+      const contenuto = JSON.stringify(dati, null, 2);
+      const blob = new Blob([contenuto], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const oggi = fmtDataOggi();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tulipano-nero-backup-${oggi}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      localStorage.setItem(ULTIMO_BACKUP_KEY, new Date().toISOString());
+      App._aggiornaTestoUltimoBackup();
+      toast('Backup scaricato', 'successo');
+    } catch (err) {
+      console.error('Backup non riuscito', err);
+      toast('Non sono riuscito a creare il backup', 'errore');
+    }
+  },
+
+  _aggiornaTestoUltimoBackup() {
+    const el = document.getElementById('backup-ultimo-testo');
+    if (!el) return;
+    const ultimo = localStorage.getItem(ULTIMO_BACKUP_KEY);
+    if (!ultimo) {
+      el.textContent = 'Non hai ancora scaricato nessun backup.';
+      return;
+    }
+    const d = new Date(ultimo);
+    el.textContent = `Ultimo backup scaricato: ${d.toLocaleDateString('it-IT')} alle ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
   },
 
   aggiornaStatoConnessione() {

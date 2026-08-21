@@ -10,10 +10,11 @@
 // L'indirizzo dello script (URL) e la chiave di sincronizzazione vanno impostati una sola
 // volta, dalle Impostazioni dell'app, su ogni dispositivo.
 //
-// SICUREZZA: la sincronizzazione usa una chiave fissa (non l'accesso Google di chi sta
+// SICUREZZA: la sincronizzazione usa una chiave fissa (non un accesso personale di chi sta
 // usando l'app in quel momento). Sono due cose intenzionalmente separate:
-// - l'accesso (vedi auth.js) decide CHI può aprire e usare l'app;
-// - questa chiave decide se i DATI possono essere letti/scritti sul foglio.
+// - l'apertura dell'app non richiede alcun accesso (scelta descritta nel README, Parte 5);
+// - questa chiave decide se i DATI possono essere letti/scritti sul foglio, ed è lei sola
+//   a proteggerli davvero.
 // La chiave non scade mai, quindi la sincronizzazione funziona sempre, in modo affidabile,
 // senza bisogno di "rinnovare" nulla — a differenza dei permessi Google, che durano poco
 // e il cui rinnovo automatico non è affidabile su tutti i dispositivi.
