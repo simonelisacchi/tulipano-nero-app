@@ -1,6 +1,6 @@
 // Service Worker Tulipano Nero
 // Mette in cache l'app (HTML/CSS/JS/icone) così si apre e funziona anche senza internet.
-const CACHE_VERSION = 'tulipano-nero-v36';
+const CACHE_VERSION = 'tulipano-nero-v38';
 const APP_SHELL = [
   './',
   './index.html',
@@ -39,28 +39,25 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Strategia "stale-while-revalidate": risponde SUBITO con la copia in cache (veloce,
-// funziona offline), ma in parallelo scarica sempre la versione più recente e la salva
-// per la prossima volta. Così, anche se un aggiornamento futuro dell'app dimenticasse
-// di cambiare CACHE_VERSION, i file si aggiornano comunque da soli entro un paio di aperture,
-// invece di restare bloccati per sempre su una versione vecchia.
-// Le chiamate verso Google Apps Script (rete) restano escluse: le gestisce sync.js.
+// Strategia "prima la rete": quando c'è connessione, l'app scarica sempre la versione più
+// recente — quella salvata sul dispositivo (in cache) serve solo come riserva per quando sei
+// offline, non più come prima scelta. È il cambio più importante di questa versione: prima,
+// per quanto ben fatto un aggiornamento fosse, il tablet poteva continuare a mostrare una
+// copia vecchia anche a lungo, perché quella veniva sempre preferita per primo.
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return; // lascia passare le chiamate esterne (Google Sheets)
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.open(CACHE_VERSION).then(async (cache) => {
-      const cached = await cache.match(event.request);
-      const fetchAggiornamento = fetch(event.request)
-        .then((response) => {
-          if (response && response.ok) cache.put(event.request, response.clone());
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetchAggiornamento;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.ok) {
+          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, response.clone()));
+        }
+        return response;
+      })
+      .catch(() => caches.open(CACHE_VERSION).then((cache) => cache.match(event.request)))
   );
 });
 
