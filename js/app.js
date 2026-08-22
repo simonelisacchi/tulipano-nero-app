@@ -3,9 +3,11 @@
 const STORES_APP = ['clienti', 'magazzino', 'agenda'];
 const ZOOM_KEY = 'tn_zoom';
 const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
-// Aggiornata a ogni modifica pubblicata: utile in Diagnostica per verificare al volo se un
-// tablet ha davvero scaricato l'ultima versione dopo un aggiornamento su GitHub.
-const APP_VERSION = '2026.08.19';
+// Numero di versione "umano", lo stesso che dai al file zip a ogni consegna (es. "V-2.4").
+// Va aggiornato qui a ogni nuova versione pubblicata su GitHub: compare sia in Impostazioni
+// (visibile a chiunque apra l'app) sia in Diagnostica, per verificare al volo se un tablet
+// ha davvero scaricato l'ultima versione dopo un aggiornamento.
+const APP_VERSION = 'V-2.6';
 
 const App = {
   async init() {
@@ -13,7 +15,7 @@ const App = {
     App.registraServiceWorker();
     App.gestisciNavigazione();
     App.gestisciImpostazioni();
-    App.gestisciPullToRefresh();
+    App.gestisciSincronizzaManuale();
     App.aggiornaStatoConnessione();
     window.addEventListener('online', App.aggiornaStatoConnessione);
     window.addEventListener('offline', App.aggiornaStatoConnessione);
@@ -107,6 +109,8 @@ const App = {
 
   apriImpostazioni() {
     document.getElementById('campo-zoom').value = localStorage.getItem(ZOOM_KEY) || '100';
+    const versioneEl = document.getElementById('impostazioni-versione');
+    if (versioneEl) versioneEl.textContent = `Versione ${APP_VERSION}`;
     App.tornaAlMenuImpostazioni(); // riparte sempre dal menu principale, mai da una sezione aperta in precedenza
     apriModal('modal-impostazioni');
   },
@@ -381,61 +385,18 @@ const App = {
     setTimeout(() => splash.remove(), 1400);
   },
 
-  // Sostituisce l'aggiornamento nativo del browser (che ricaricherebbe tutta la pagina,
-  // costringendo a un nuovo accesso) con una sincronizzazione vera e propria dei dati.
-  gestisciPullToRefresh() {
-    const contenitore = document.getElementById('contenuto-principale');
-    const indicatore = document.getElementById('pull-sync');
-    const testoIndicatore = document.getElementById('pull-sync-testo');
-    if (!contenitore || !indicatore) return;
-
-    const SOGLIA_PX = 70;
-    let inizioY = null;
-    let trascinando = false;
-    let sincronizzando = false;
-
-    contenitore.addEventListener('touchstart', (e) => {
-      if (contenitore.scrollTop <= 0 && !sincronizzando) {
-        inizioY = e.touches[0].clientY;
-        trascinando = true;
-      }
-    }, { passive: true });
-
-    contenitore.addEventListener('touchmove', (e) => {
-      if (!trascinando || inizioY === null) return;
-      // Appena lo scorrimento normale prende il sopravvento (es. si sta scorrendo la
-      // lunga griglia dell'agenda), ci si ferma subito: non deve mai intralciarlo.
-      if (contenitore.scrollTop > 0) {
-        trascinando = false;
-        indicatore.style.height = '0px';
-        return;
-      }
-      const delta = e.touches[0].clientY - inizioY;
-      if (delta <= 0) { indicatore.style.height = '0px'; return; }
-      const distanza = Math.min(delta * 0.5, 70);
-      indicatore.style.height = `${distanza}px`;
-      testoIndicatore.textContent = distanza >= SOGLIA_PX ? 'Rilascia per sincronizzare' : 'Trascina per sincronizzare';
-    }, { passive: true });
-
-    contenitore.addEventListener('touchend', async () => {
-      if (!trascinando) return;
-      const distanza = parseFloat(indicatore.style.height) || 0;
-      trascinando = false;
-      inizioY = null;
-
-      if (distanza >= SOGLIA_PX && !sincronizzando) {
-        sincronizzando = true;
-        indicatore.classList.add('pull-sync--girando');
-        testoIndicatore.textContent = 'Sincronizzazione…';
-        indicatore.style.height = '50px';
-        await Sync.syncNow({ silent: true });
-        indicatore.style.height = '0px';
-        indicatore.classList.remove('pull-sync--girando');
-        sincronizzando = false;
-      } else {
-        indicatore.style.height = '0px';
-      }
-    }, { passive: true });
+  // Sostituisce lo scorrimento "trascina per sincronizzare" (comodo ma facilmente scambiato
+  // per un semplice tentativo di scorrere la pagina) con un tasto sempre visibile in alto:
+  // lo scorrimento resta libero di servire solo a muoversi dentro l'app.
+  gestisciSincronizzaManuale() {
+    const btn = document.getElementById('btn-sincronizza');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      if (btn.classList.contains('icon-btn--girando')) return; // evita doppie sincronizzazioni se si tocca più volte di fretta
+      btn.classList.add('icon-btn--girando');
+      await Sync.syncNow({ silent: false });
+      btn.classList.remove('icon-btn--girando');
+    });
   }
 };
 

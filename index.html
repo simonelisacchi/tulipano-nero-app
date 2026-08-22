@@ -6,13 +6,28 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0B4B49">
 <title>Tulipano Nero</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
+<script>
+  // Calcola l'altezza reale e utilizzabile dello schermo (window.innerHeight, sempre
+  // affidabile) e la salva in una variabile CSS. Serve come rete di sicurezza per i
+  // tablet/browser che, con le sole unità CSS vh/dvh, sbagliano il calcolo — capita
+  // soprattutto quando la barra degli indirizzi del browser appare/scompare — e come
+  // conseguenza lo scorrimento della pagina smette di funzionare. Eseguito il prima
+  // possibile (prima ancora che il resto della pagina si carichi) per evitare che lo
+  // schermo "salti" quando il valore viene corretto in un secondo momento.
+  function impostaAltezzaReale() {
+    document.documentElement.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px');
+  }
+  impostaAltezzaReale();
+  window.addEventListener('resize', impostaAltezzaReale);
+  window.addEventListener('orientationchange', impostaAltezzaReale);
+</script>
 </head>
 <body>
 
@@ -35,14 +50,13 @@
   <div class="header__stato">
     <span id="stato-connessione" class="stato-connessione">Online</span>
     <span id="sync-badge" class="sync-badge"></span>
+    <button id="btn-sincronizza" class="icon-btn icon-btn--header" aria-label="Sincronizza ora" title="Sincronizza ora">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+    </button>
   </div>
 </header>
 
 <main class="contenuto" id="contenuto-principale">
-  <div class="pull-sync" id="pull-sync">
-    <span class="pull-sync__icona"></span>
-    <span id="pull-sync-testo">Trascina per sincronizzare</span>
-  </div>
 
 
   <!-- VISTA CLIENTI -->
@@ -319,6 +333,7 @@
           <svg class="impostazioni-menu__freccia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
         <p class="impostazioni-firma">🌷 Realizzata da Simone Li Sacchi, con l'aiuto di Claude</p>
+        <p class="impostazioni-firma impostazioni-firma--versione" id="impostazioni-versione"></p>
       </div>
 
       <!-- Livello 2: dettaglio di ciascuna categoria. Una sola alla volta, con un tasto per tornare al menu. -->

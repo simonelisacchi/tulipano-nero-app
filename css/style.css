@@ -61,8 +61,10 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;  /* ripiego per browser/webview meno recenti */
-  min-height: 100dvh; /* più preciso quando supportato, ma come "minimo", non come vincolo rigido */
+  height: 100vh;  /* ripiego per browser/webview meno recenti */
+  height: 100dvh; /* più preciso quando supportato */
+  height: calc(var(--app-vh, 1vh) * 100); /* calcolato a mano in app.js: rete di sicurezza sui tablet/browser che sbagliano il calcolo dell'altezza reale dello schermo */
+  overflow: hidden; /* lo scorrimento avviene solo dentro .contenuto, mai su tutta la pagina: intestazione e barra in basso restano sempre fissi */
 }
 
 button, input, select, textarea { font-family: inherit; font-size: 1rem; }
@@ -123,14 +125,18 @@ button { cursor: pointer; }
   font-size: 1.125rem; width: 34px; height: 34px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
 }
+.icon-btn svg { width: 18px; height: 18px; }
 .icon-btn:hover { background: rgba(255,255,255,0.08); }
 .modal .icon-btn:hover { background: rgba(21,41,37,0.06); }
 .icon-btn--bordo { background: var(--crema-scuro); color: var(--verde-nero); flex-shrink: 0; }
 .icon-btn--bordo:hover { background: var(--prugna); color: var(--crema); }
+.icon-btn--header { width: 30px; height: 30px; flex-shrink: 0; }
+.icon-btn--girando svg { animation: girare 0.8s linear infinite; }
+@keyframes girare { to { transform: rotate(360deg); } }
 .vista__intestazione-azioni { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- Layout ---------- */
-.contenuto { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
+.contenuto { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
 
 /* ---------- Adattamento a schermi larghi (tablet, orizzontale) ----------
    Più larghezza disponibile -> più spazio al contenuto, non solo margini vuoti ai lati:
@@ -220,7 +226,7 @@ button { cursor: pointer; }
 .btn--piccolo { padding: 7px 14px; font-size: 0.8125rem; flex: 1; }
 
 /* ---------- Ricerca appuntamenti (Agenda) ---------- */
-.ricerca-agenda-risultati { display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto; }
+.ricerca-agenda-risultati { display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .risultato-appuntamento {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
   background: var(--crema); border: 1px solid var(--bordo); border-radius: 14px; padding: 10px 12px;
@@ -407,7 +413,7 @@ button { cursor: pointer; }
 
 .modal__pannello {
   background: var(--crema); width: 100%; max-width: 560px;
-  border-radius: 20px 20px 0 0; max-height: 92dvh; overflow-y: auto;
+  border-radius: 20px 20px 0 0; max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
   animation: salireModal 0.25s cubic-bezier(0.2,0.8,0.2,1);
 }
 @media (min-width: 640px) {
@@ -479,6 +485,7 @@ button { cursor: pointer; }
 .impostazioni-menu__valore { font-size: 0.8125rem; color: var(--testo-muto); }
 .impostazioni-menu__freccia { width: 18px; height: 18px; color: var(--testo-muto); flex-shrink: 0; }
 .impostazioni-firma { text-align: center; font-size: 0.75rem; color: var(--testo-muto); margin: 14px 0 4px; }
+.impostazioni-firma--versione { margin-top: 0; opacity: 0.7; }
 
 /* Pannelli di dettaglio: stessa "cornice" per tutti, con il tasto per tornare al menu in cima. */
 .impostazioni-blocco { padding: 14px 20px 20px; gap: 10px; }
@@ -523,7 +530,7 @@ button { cursor: pointer; }
   font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--testo-muto);
   padding: 0 4px 6px;
 }
-.listino-tabella { max-height: 300px; overflow-y: auto; border: 1px solid var(--bordo); border-radius: 10px; }
+.listino-tabella { max-height: 300px; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--bordo); border-radius: 10px; }
 .listino-riga { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--crema-scuro); }
 .listino-riga:last-child { border-bottom: none; }
 .listino-riga__nome { font-weight: 600; font-size: 0.8438rem; }
@@ -560,19 +567,6 @@ button { cursor: pointer; }
   .listino-stampa__nome { font-size: 19px; font-weight: 600; color: #111; }
   .listino-stampa__prezzo { font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--verde-nero); }
 }
-/* ---------- Indicatore "trascina per sincronizzare" ---------- */
-.pull-sync {
-  height: 0; overflow: hidden;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  color: var(--verde-nero); font-size: 0.8rem; font-weight: 600;
-}
-.pull-sync__icona {
-  width: 20px; height: 20px; border: 2px solid var(--verde-nero); border-top-color: transparent;
-  border-radius: 999px; flex-shrink: 0; transition: transform 0.1s linear;
-}
-.pull-sync--girando .pull-sync__icona { animation: pull-sync-gira 0.7s linear infinite; }
-@keyframes pull-sync-gira { to { transform: rotate(360deg); } }
-
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; top: 14px; left: 50%; transform: translate(-50%, -140%);
