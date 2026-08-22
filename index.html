@@ -13,29 +13,6 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
-<script>
-  // Calcola l'altezza reale e utilizzabile dello schermo (window.innerHeight, sempre
-  // affidabile) e la salva in una variabile CSS. Serve come rete di sicurezza per i
-  // tablet/browser che, con le sole unità CSS vh/dvh, sbagliano il calcolo — capita
-  // soprattutto quando la barra degli indirizzi del browser appare/scompare — e come
-  // conseguenza lo scorrimento della pagina smette di funzionare. Eseguito il prima
-  // possibile (prima ancora che il resto della pagina si carichi) per evitare che lo
-  // schermo "salti" quando il valore viene corretto in un secondo momento.
-  function impostaAltezzaReale() {
-    const altezza = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-    document.documentElement.style.setProperty('--app-vh', (altezza * 0.01) + 'px');
-  }
-  impostaAltezzaReale();
-  window.addEventListener('resize', impostaAltezzaReale);
-  window.addEventListener('orientationchange', impostaAltezzaReale);
-  // Su Android, dentro il browser (non installata come icona), la barra degli indirizzi di
-  // Chrome appare e scompare mentre si scorre: window.resize non sempre se ne accorge in
-  // tempo, mentre visualViewport (dove supportato) sì — è lui il modo giusto per seguire
-  // quel movimento e tenere il calcolo dell'altezza sempre corretto.
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', impostaAltezzaReale);
-  }
-</script>
 </head>
 <body>
 

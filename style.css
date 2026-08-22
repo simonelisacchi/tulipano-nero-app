@@ -59,12 +59,11 @@ html, body {
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;  /* ripiego per browser/webview meno recenti */
-  height: 100dvh; /* più preciso quando supportato */
-  height: calc(var(--app-vh, 1vh) * 100); /* calcolato a mano in app.js: rete di sicurezza sui tablet/browser che sbagliano il calcolo dell'altezza reale dello schermo */
-  overflow: hidden; /* lo scorrimento avviene solo dentro .contenuto, mai su tutta la pagina: intestazione e barra in basso restano sempre fissi */
+  overflow: hidden; /* non deve mai scorrere la pagina intera: intestazione, area centrale e
+    barra in basso sono ciascuna "ancorata" per conto proprio (vedi sotto), non più incastrate
+    in un unico blocco alto quanto lo schermo — così il risultato non dipende più dal fatto che
+    il browser calcoli bene o male quanto è alto lo schermo, che si è rivelato un punto debole
+    su alcuni tablet. */
 }
 
 button, input, select, textarea { font-family: inherit; font-size: 1rem; }
@@ -99,7 +98,7 @@ button { cursor: pointer; }
   padding: 12px 16px;
   background: var(--verde-nero);
   color: var(--crema);
-  flex-shrink: 0;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
 }
 .header__brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .header__logo {
@@ -135,8 +134,19 @@ button { cursor: pointer; }
 @keyframes girare { to { transform: rotate(360deg); } }
 .vista__intestazione-azioni { display: flex; align-items: center; gap: 8px; }
 
-/* ---------- Layout ---------- */
-.contenuto { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
+/* ---------- Layout ----------
+   L'intestazione è "ancorata" in alto (vedi .header) e la barra in basso è "ancorata" in
+   fondo (vedi .tab-bar): qui l'area di contenuto viene ancorata esattamente tra le due,
+   usando le loro altezze VERE, misurate in app.js e salvate in --header-h/--tabbar-h — non
+   un calcolo basato sull'altezza dello schermo (fonte di comportamenti incoerenti su alcuni
+   tablet/browser). I valori dopo la virgola sono solo un ripiego per l'istantino prima che
+   la misura venga fatta. */
+.contenuto {
+  position: fixed; left: 0; right: 0;
+  top: var(--header-h, 58px); bottom: var(--tabbar-h, 64px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
+  padding: 20px 16px 24px; max-width: 720px; margin: 0 auto; width: 100%;
+}
 
 /* ---------- Adattamento a schermi larghi (tablet, orizzontale) ----------
    Più larghezza disponibile -> più spazio al contenuto, non solo margini vuoti ai lati:
@@ -464,7 +474,6 @@ button { cursor: pointer; }
   .header__titolo { font-size: 1rem; }
   .tab-bar__voce { padding: 6px 0 4px; }
   .tab-bar__icona { width: 18px; height: 18px; }
-  .contenuto { padding-bottom: 66px; }
   .splash__logo { width: 180px; }
 }
 
