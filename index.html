@@ -6,7 +6,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#0B4B49">
 <title>Tulipano Nero</title>
 <link rel="manifest" href="manifest.json">
@@ -22,11 +22,19 @@
   // possibile (prima ancora che il resto della pagina si carichi) per evitare che lo
   // schermo "salti" quando il valore viene corretto in un secondo momento.
   function impostaAltezzaReale() {
-    document.documentElement.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px');
+    const altezza = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--app-vh', (altezza * 0.01) + 'px');
   }
   impostaAltezzaReale();
   window.addEventListener('resize', impostaAltezzaReale);
   window.addEventListener('orientationchange', impostaAltezzaReale);
+  // Su Android, dentro il browser (non installata come icona), la barra degli indirizzi di
+  // Chrome appare e scompare mentre si scorre: window.resize non sempre se ne accorge in
+  // tempo, mentre visualViewport (dove supportato) sì — è lui il modo giusto per seguire
+  // quel movimento e tenere il calcolo dell'altezza sempre corretto.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', impostaAltezzaReale);
+  }
 </script>
 </head>
 <body>
