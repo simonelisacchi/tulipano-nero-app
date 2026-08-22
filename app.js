@@ -7,7 +7,7 @@ const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
 // Va aggiornato qui a ogni nuova versione pubblicata su GitHub: compare sia in Impostazioni
 // (visibile a chiunque apra l'app) sia in Diagnostica, per verificare al volo se un tablet
 // ha davvero scaricato l'ultima versione dopo un aggiornamento.
-const APP_VERSION = 'V-2.8';
+const APP_VERSION = 'V-3.0';
 
 const App = {
   async init() {
@@ -19,10 +19,6 @@ const App = {
     App.aggiornaStatoConnessione();
     window.addEventListener('online', App.aggiornaStatoConnessione);
     window.addEventListener('offline', App.aggiornaStatoConnessione);
-
-    App.impostaAltezzeFisse();
-    window.addEventListener('resize', App.impostaAltezzeFisse);
-    window.addEventListener('orientationchange', App.impostaAltezzeFisse);
 
     await Clienti.init();
     await Agenda.init();
@@ -39,21 +35,6 @@ const App = {
     setInterval(() => Sync.syncNow({ silent: true }), 5 * 60 * 1000);
 
     App.animazioneAvvio();
-  },
-
-  // L'intestazione in alto e la barra in basso sono "ancorate" ciascuna per conto proprio
-  // (CSS: position: fixed), e l'area di contenuto in mezzo viene ancorata esattamente tra le
-  // due. Per farlo servono le loro altezze VERE: si misurano qui, una volta all'avvio e ogni
-  // volta che potrebbero cambiare (rotazione dello schermo, ridimensionamento della finestra),
-  // e si salvano in due variabili CSS che il foglio di stile usa per posizionare tutto.
-  // Deliberatamente NON si usano le unità "altezza schermo" (vh/dvh) per questo calcolo: su
-  // alcuni tablet si sono rivelate inaffidabili, mentre misurare gli elementi veri è sempre
-  // corretto, qualunque sia il dispositivo o il browser.
-  impostaAltezzeFisse() {
-    const header = document.querySelector('.header');
-    const tabBar = document.querySelector('.tab-bar');
-    if (header) document.documentElement.style.setProperty('--header-h', `${header.getBoundingClientRect().height}px`);
-    if (tabBar) document.documentElement.style.setProperty('--tabbar-h', `${tabBar.getBoundingClientRect().height}px`);
   },
 
   applyZoomSalvato() {
@@ -282,10 +263,6 @@ const App = {
       App.applyZoom(e.target.value);
       localStorage.setItem(ZOOM_KEY, e.target.value);
       App.aggiornaValoriMenuImpostazioni();
-      // Il testo più grande può cambiare leggermente l'altezza dell'intestazione: si
-      // ricalcola subito, altrimenti l'area di contenuto resterebbe ancorata alla misura
-      // precedente finché non si ridimensiona lo schermo per un altro motivo.
-      setTimeout(App.impostaAltezzeFisse, 0);
     });
 
     // ---- Sincronizzazione: indirizzo e chiave protetti, vanno sbloccati apposta ----
