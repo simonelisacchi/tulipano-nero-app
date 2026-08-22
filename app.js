@@ -7,7 +7,7 @@ const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
 // Va aggiornato qui a ogni nuova versione pubblicata su GitHub: compare sia in Impostazioni
 // (visibile a chiunque apra l'app) sia in Diagnostica, per verificare al volo se un tablet
 // ha davvero scaricato l'ultima versione dopo un aggiornamento.
-const APP_VERSION = 'V-3.2';
+const APP_VERSION = 'V-3.3';
 
 const App = {
   async init() {

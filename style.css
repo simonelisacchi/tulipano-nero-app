@@ -58,12 +58,13 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Pagina completamente "normale", senza nessun meccanismo speciale che tocchi lo scorrimento
-   o il posizionamento — non "sticky", non "overscroll-behavior", non altezze calcolate: se
-   un browser sa mostrare una pagina, sa farla scorrere. L'intestazione (.header) scorre via
-   con il resto del contenuto invece di restare fissa in cima: si perde una piccola comodità
-   visiva, in cambio della certezza che nulla in questo foglio di stile possa interferire con
-   lo scorrimento, su nessun dispositivo. */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;  /* ripiego per browser/webview meno recenti */
+  min-height: 100dvh; /* più preciso quando supportato, ma come "minimo", non come vincolo rigido */
+}
+
 button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--prugna); outline-offset: 2px; }
@@ -96,6 +97,7 @@ button { cursor: pointer; }
   padding: 12px 16px;
   background: var(--verde-nero);
   color: var(--crema);
+  flex-shrink: 0;
 }
 .header__brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .header__logo {
@@ -132,7 +134,7 @@ button { cursor: pointer; }
 .vista__intestazione-azioni { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- Layout ---------- */
-.contenuto { padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
+.contenuto { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 20px 16px 90px; max-width: 720px; margin: 0 auto; width: 100%; position: relative; }
 
 /* ---------- Adattamento a schermi larghi (tablet, orizzontale) ----------
    Più larghezza disponibile -> più spazio al contenuto, non solo margini vuoti ai lati:
