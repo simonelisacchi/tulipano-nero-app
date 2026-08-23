@@ -56,6 +56,7 @@ html, body {
   font-family: var(--font-corpo);
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* niente pinch-to-zoom né doppio-tocco-per-zoomare; scroll/tap restano normali */
 }
 
 body {
