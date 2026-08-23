@@ -1,6 +1,6 @@
 // Service Worker Tulipano Nero
 // Mette in cache l'app (HTML/CSS/JS/icone) così si apre e funziona anche senza internet.
-const CACHE_VERSION = 'tulipano-nero-v39';
+const CACHE_VERSION = 'tulipano-nero-v40';
 const APP_SHELL = [
   './',
   './index.html',
@@ -53,7 +53,8 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request)
       .then((response) => {
         if (response && response.ok) {
-          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, response.clone()));
+          const copia = response.clone(); // fatta subito: se si aspetta, il corpo potrebbe già essere stato letto
+          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, copia));
         }
         return response;
       })

@@ -65,6 +65,13 @@ body {
   min-height: 100dvh; /* più preciso quando supportato, ma come "minimo", non come vincolo rigido */
 }
 
+#app-contenuto {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;  /* ripiego per browser/webview meno recenti */
+  min-height: 100dvh; /* più preciso quando supportato, ma come "minimo", non come vincolo rigido */
+}
+
 button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--prugna); outline-offset: 2px; }
