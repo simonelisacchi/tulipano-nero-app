@@ -31,6 +31,12 @@
   --prugna: #5B2A45;
   --oro: #B08D4F;
   --rosso: #9B3B3B;
+  /* Colori dedicati SOLO al servizio "Visita tricologica", per renderlo riconoscibile a colpo
+     d'occhio ovunque compaia: chip di selezione e blocco in agenda (chiaro = prenotato,
+     scuro = cliente arrivata) — un viola distinto dal prugna, già usato altrove nell'app. */
+  --viola-chiaro: #E7DBF3;
+  --viola: #7C4FA0;
+  --viola-scuro: #3D2A52;
   --testo: #1F2420;
   --testo-muto: #6B7268;
   --bordo: #E1D9C6;
@@ -314,6 +320,13 @@ button { cursor: pointer; }
 .agenda-blocco--completato { background: #5C6660; border-left-color: #3F4740; color: var(--crema); }
 .agenda-blocco--completato .agenda-blocco__servizio { color: rgba(246,241,231,0.75); }
 
+/* Servizio atipico "Visita tricologica": resta viola in entrambi gli stati, invece del verde/
+   grigio standard, così si riconosce sempre come diverso dagli appuntamenti soliti — chiaro
+   finché la cliente non è arrivata, scuro (non grigio) una volta segnata come arrivata. */
+.agenda-blocco--tricologica.agenda-blocco--confermato { background: var(--viola-chiaro); border-left-color: var(--viola); }
+.agenda-blocco--tricologica.agenda-blocco--completato { background: var(--viola-scuro); border-left-color: #291D38; color: var(--crema); }
+.agenda-blocco--tricologica.agenda-blocco--completato .agenda-blocco__servizio { color: rgba(246,241,231,0.75); }
+
 .agenda-blocco__spunta {
   position: absolute; top: 50%; right: 3px; width: 28px; height: 28px; border-radius: 999px;
   transform: translateY(-50%);
@@ -344,6 +357,11 @@ button { cursor: pointer; }
   text-align: center; min-height: 38px;
 }
 .servizio-bottone--selezionato { background: var(--verde-nero); color: var(--crema); border-color: var(--verde-nero); font-weight: 700; }
+
+/* Servizio atipico "Visita tricologica": viola sempre, anche prima della selezione, così si
+   nota subito in mezzo agli altri servizi invece di scoprirlo solo scorrendo l'elenco. */
+.servizio-bottone--tricologica { background: var(--viola-chiaro); border-color: var(--viola); color: var(--viola-scuro); font-weight: 700; }
+.servizio-bottone--tricologica.servizio-bottone--selezionato { background: var(--viola); border-color: var(--viola); color: var(--crema); }
 
 /* ---------- Agenda: vista mese ---------- */
 .agenda-mese-intestazione {
