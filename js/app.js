@@ -1,13 +1,12 @@
 // app.js — avvio dell'app, navigazione tra le sezioni, impostazioni di sincronizzazione
 
-const STORES_APP = ['clienti', 'magazzino', 'agenda'];
 const ZOOM_KEY = 'tn_zoom';
 const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
 // Numero di versione "umano", lo stesso che dai al file zip a ogni consegna (es. "V-2.4").
 // Va aggiornato qui a ogni nuova versione pubblicata su GitHub: compare sia in Impostazioni
 // (visibile a chiunque apra l'app) sia in Diagnostica, per verificare al volo se un tablet
 // ha davvero scaricato l'ultima versione dopo un aggiornamento.
-const APP_VERSION = 'V-3.8';
+const APP_VERSION = 'V-3.9';
 
 const App = {
   async init() {

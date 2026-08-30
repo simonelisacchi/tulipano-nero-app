@@ -27,6 +27,7 @@ const LISTINO_PREZZI = [
   { servizio: 'Ondulazione', minuti: 30, prezzo: 40 },
   { servizio: 'Keratina anti-crespo', minuti: 75, prezzo: 30 },
   { servizio: 'Keratina stirante', minuti: 180, prezzo: 'da 120 a 180' },
+  { servizio: 'Visita tricologica', minuti: 30, prezzo: 40 },
   { servizio: 'Shampoo specifico', minuti: null, prezzo: 3 },
   { servizio: 'Crema', minuti: null, prezzo: 3 },
   { servizio: 'Panacea', minuti: null, prezzo: 4 },

@@ -201,9 +201,10 @@ const Agenda = {
       const spanRighe = Math.max(1, Math.round((a.durata || 30) / 30));
       const colonna = a.colonna ?? 0;
 
+      const eTricologica = (a.servizio || '').split(',').map((s) => s.trim()).includes('Visita tricologica');
       const blocco = document.createElement('button');
       blocco.type = 'button';
-      blocco.className = `agenda-blocco agenda-blocco--${a.stato || 'confermato'}`;
+      blocco.className = `agenda-blocco agenda-blocco--${a.stato || 'confermato'}${eTricologica ? ' agenda-blocco--tricologica' : ''}`;
       blocco.style.gridColumn = String(colonna + 2);
       blocco.style.gridRow = `${indiceOra + 1} / span ${spanRighe}`;
       blocco.innerHTML = `
@@ -255,7 +256,7 @@ const Agenda = {
   _popolaGrigliaServizio() {
     const contenitore = document.getElementById('servizio-griglia');
     contenitore.innerHTML = Object.keys(SERVIZI_DURATA).map((s) => `
-      <button type="button" class="servizio-bottone" data-servizio="${escapeHtml(s)}">${escapeHtml(s)}</button>
+      <button type="button" class="servizio-bottone${s === 'Visita tricologica' ? ' servizio-bottone--tricologica' : ''}" data-servizio="${escapeHtml(s)}">${escapeHtml(s)}</button>
     `).join('');
     contenitore.querySelectorAll('.servizio-bottone').forEach((btn) => {
       btn.addEventListener('click', () => Agenda._toggleServizio(btn.dataset.servizio));
