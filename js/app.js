@@ -2,11 +2,15 @@
 
 const ZOOM_KEY = 'tn_zoom';
 const ULTIMO_BACKUP_KEY = 'tn_ultimo_backup';
+// Segnalino che ricorda "questo tablet ha già corretto le maiuscole dei nomi già inseriti":
+// evita di rifare il controllo (inutile, dato che i nomi già sistemati restano sistemati) ad
+// ogni singolo avvio dell'app.
+const MIGRAZIONE_MAIUSCOLE_KEY = 'tn_migrazione_maiuscole_nomi_v1';
 // Numero di versione "umano", lo stesso che dai al file zip a ogni consegna (es. "V-2.4").
 // Va aggiornato qui a ogni nuova versione pubblicata su GitHub: compare sia in Impostazioni
 // (visibile a chiunque apra l'app) sia in Diagnostica, per verificare al volo se un tablet
 // ha davvero scaricato l'ultima versione dopo un aggiornamento.
-const APP_VERSION = 'V-3.9';
+const APP_VERSION = 'V-3.11';
 
 const App = {
   async init() {
@@ -24,6 +28,7 @@ const App = {
     await Magazzino.init();
     Promemoria.init();
     App.gestisciAperturaDaNotifica();
+    await App.migraCapitalizzazioneNomiEsistenti();
 
     if (Sync.getUrl() && Sync.getSecret()) {
       Sync.syncNow({ silent: true });
@@ -34,6 +39,49 @@ const App = {
     setInterval(() => Sync.syncNow({ silent: true }), 5 * 60 * 1000);
 
     App.animazioneAvvio();
+  },
+
+  // Una tantum: corregge le maiuscole dei nomi già inseriti PRIMA che esistesse questa
+  // correzione automatica (quelli inseriti da qui in avanti vengono già sistemati da sé,
+  // vedi autoCapitalizzaSuUscita in utils.js). Tocca solo i record che risultano davvero
+  // diversi dopo la correzione, così non genera invii inutili in sincronizzazione per i nomi
+  // già scritti bene.
+  async migraCapitalizzazioneNomiEsistenti() {
+    if (localStorage.getItem(MIGRAZIONE_MAIUSCOLE_KEY)) return;
+    try {
+      let modificati = 0;
+
+      const clienti = await DB.getAll('clienti');
+      for (const c of clienti) {
+        const cognome = capitalizzaNome(c.cognome);
+        const nome = capitalizzaNome(c.nome);
+        if (cognome !== c.cognome || nome !== c.nome) {
+          await DB.save('clienti', { ...c, cognome, nome });
+          modificati++;
+        }
+      }
+
+      const appuntamenti = await DB.getAll('agenda');
+      for (const a of appuntamenti) {
+        const clienteNome = capitalizzaNome(a.clienteNome);
+        if (clienteNome !== a.clienteNome) {
+          await DB.save('agenda', { ...a, clienteNome });
+          modificati++;
+        }
+      }
+
+      // Il segnalino si salva solo se tutto è andato a buon fine: se qualcosa fallisce a metà,
+      // al prossimo avvio si ritenta (nessun danno, dato che i record già corretti nel
+      // frattempo vengono semplicemente ritrovati già a posto e ignorati).
+      localStorage.setItem(MIGRAZIONE_MAIUSCOLE_KEY, '1');
+
+      if (modificati > 0) {
+        await Clienti.render();
+        await Agenda.render();
+      }
+    } catch (err) {
+      console.error('Correzione automatica dei nomi già inseriti non riuscita', err);
+    }
   },
 
   applyZoomSalvato() {

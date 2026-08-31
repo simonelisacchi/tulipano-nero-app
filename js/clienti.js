@@ -8,6 +8,8 @@ const Clienti = {
     document.getElementById('btn-aggiungi-cliente').addEventListener('click', () => Clienti.apriForm());
     document.getElementById('form-cliente').addEventListener('submit', Clienti.onSubmit);
     document.getElementById('btn-annulla-cliente').addEventListener('click', () => chiudiModal('modal-cliente'));
+    autoCapitalizzaSuUscita(document.querySelector('#form-cliente [name="cognome"]'));
+    autoCapitalizzaSuUscita(document.querySelector('#form-cliente [name="nome"]'));
     document.getElementById('cerca-clienti').addEventListener('input', debounce((e) => {
       Clienti.filtro = e.target.value.trim().toLowerCase();
       Clienti.render();

@@ -53,6 +53,7 @@ const Agenda = {
     document.getElementById('btn-aggiungi-appuntamento').addEventListener('click', () => Agenda.apriForm());
     document.getElementById('form-appuntamento').addEventListener('submit', Agenda.onSubmit);
     document.getElementById('btn-annulla-appuntamento').addEventListener('click', () => chiudiModal('modal-appuntamento'));
+    autoCapitalizzaSuUscita(document.querySelector('#form-appuntamento [name="clienteNome"]'));
 
     document.getElementById('agenda-data').value = Agenda.dataSelezionata;
     document.getElementById('agenda-data').addEventListener('change', (e) => {

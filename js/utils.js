@@ -68,3 +68,26 @@ function initialsOf(nome, cognome) {
   const b = (cognome || '').trim()[0] || '';
   return (a + b).toUpperCase() || '?';
 }
+
+// Porta in maiuscolo la prima lettera di ogni parola di un nome (il resto in minuscolo) — utile
+// perché chi scrive di fretta su un tablet spesso lascia tutto minuscolo o tutto maiuscolo.
+// Gestisce anche i nomi composti: spazi ("de rossi" -> "De Rossi"), trattini ("anna-maria" ->
+// "Anna-Maria") e apostrofi ("d'angelo" -> "D'Angelo").
+function capitalizzaNome(testo) {
+  if (!testo) return testo;
+  return testo.trim().replace(/\s+/g, ' ').split(' ').map((parola) => parola
+    .split('-').map((parte) => parte
+      .split("'").map((sotto) => sotto ? sotto.charAt(0).toUpperCase() + sotto.slice(1).toLowerCase() : sotto)
+      .join("'"))
+    .join('-'))
+    .join(' ');
+}
+
+// Applica capitalizzaNome quando si lascia il campo (non mentre si scrive, per non
+// "combattere" col dito sul tablet mentre il cognome è ancora a metà).
+function autoCapitalizzaSuUscita(input) {
+  if (!input) return;
+  input.addEventListener('blur', () => {
+    input.value = capitalizzaNome(input.value);
+  });
+}
